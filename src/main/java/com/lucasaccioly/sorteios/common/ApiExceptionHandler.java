@@ -1,6 +1,7 @@
 package com.lucasaccioly.sorteios.common;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     ProblemDetail unauthorized(UnauthorizedException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    /** Defence in depth: a unique constraint fired (e.g. a number sold twice) despite the row lock. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail conflict(DataIntegrityViolationException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Conflito ao gravar; tente novamente");
     }
 
     @ExceptionHandler(InvalidRequestException.class)

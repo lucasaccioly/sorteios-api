@@ -9,6 +9,7 @@ import com.lucasaccioly.sorteios.raffle.RaffleDtos.PageResponse;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.Person;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.RaffleRequest;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.RaffleResponse;
+import com.lucasaccioly.sorteios.ticket.TicketRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,13 @@ public class RaffleService {
 
     private final RaffleRepository raffles;
     private final UserRepository users;
+    private final TicketRepository tickets;
     private final Clock clock;
 
-    RaffleService(RaffleRepository raffles, UserRepository users, Clock clock) {
+    RaffleService(RaffleRepository raffles, UserRepository users, TicketRepository tickets, Clock clock) {
         this.raffles = raffles;
         this.users = users;
+        this.tickets = tickets;
         this.clock = clock;
     }
 
@@ -134,9 +137,8 @@ public class RaffleService {
         return value == null || value.isBlank() ? null : value.strip();
     }
 
-    // shortcut: no tickets yet; replaced by a real count when ticket purchase lands.
     long soldCount(Raffle raffle) {
-        return 0;
+        return raffle.getStatus() == RaffleStatus.DRAFT ? 0 : tickets.countByRaffleId(raffle.getId());
     }
 
     RaffleResponse toResponse(Raffle raffle) {
