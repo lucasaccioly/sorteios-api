@@ -21,4 +21,9 @@ public interface RaffleRepository extends JpaRepository<Raffle, UUID>, JpaSpecif
 
     @Query("select r.id from Raffle r where r.status = com.lucasaccioly.sorteios.raffle.RaffleStatus.OPEN and r.drawAt <= :now")
     List<UUID> findIdsDue(@Param("now") Instant now);
+
+    @Query("""
+            select count(r) > 0 from Raffle r
+            where r.id = :id and r.status = com.lucasaccioly.sorteios.raffle.RaffleStatus.OPEN and r.drawAt <= :now""")
+    boolean isDue(@Param("id") UUID id, @Param("now") Instant now);
 }

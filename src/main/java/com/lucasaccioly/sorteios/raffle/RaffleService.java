@@ -4,6 +4,7 @@ import com.lucasaccioly.sorteios.auth.UserRepository;
 import com.lucasaccioly.sorteios.common.BusinessException;
 import com.lucasaccioly.sorteios.common.InvalidRequestException;
 import com.lucasaccioly.sorteios.common.NotFoundException;
+import com.lucasaccioly.sorteios.draw.DrawService;
 import com.lucasaccioly.sorteios.draw.Seeds;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.PageResponse;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.Person;
@@ -24,12 +25,15 @@ public class RaffleService {
     private final RaffleRepository raffles;
     private final UserRepository users;
     private final TicketRepository tickets;
+    private final DrawService drawService;
     private final Clock clock;
 
-    RaffleService(RaffleRepository raffles, UserRepository users, TicketRepository tickets, Clock clock) {
+    RaffleService(RaffleRepository raffles, UserRepository users, TicketRepository tickets,
+                  DrawService drawService, Clock clock) {
         this.raffles = raffles;
         this.users = users;
         this.tickets = tickets;
+        this.drawService = drawService;
         this.clock = clock;
     }
 
@@ -86,9 +90,14 @@ public class RaffleService {
         return toResponse(raffle);
     }
 
-    /** Loads a raffle the caller may see: drafts only for their organizer. */
+    /**
+     * Loads a raffle the caller may see: drafts only for their organizer. A raffle past its drawAt is drawn first
+     * (in its own transaction), so readers never see a stale OPEN raffle even if the scheduler has not run yet.
+     * Must be the first load of the raffle in the surrounding transaction.
+     */
     @Transactional(readOnly = true)
     public Raffle getVisible(UUID raffleId, UUID callerOrNull) {
+        drawService.drawIfDue(raffleId);
         return raffles.findById(raffleId)
                 .filter(r -> r.getStatus() != RaffleStatus.DRAFT || r.isOrganizer(callerOrNull))
                 .orElseThrow(NotFoundException::new);
