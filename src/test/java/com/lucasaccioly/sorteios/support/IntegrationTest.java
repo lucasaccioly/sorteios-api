@@ -13,11 +13,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Base class for integration tests: real PostgreSQL (embedded), MockMvc and a controllable clock. */
 @SpringBootTest(properties = "app.scheduling.enabled=false")
@@ -61,6 +68,24 @@ public abstract class IntegrationTest {
             jdbc.execute("truncate table " + String.join(", ", tables) + " restart identity cascade");
         }
     }
+
+    public record TestUser(UUID id, String token) {}
+
+    /** Registers a user through the real endpoint (password "senha12345"). */
+    protected TestUser register(String name, String email) throws Exception {
+        String body = json.writeValueAsString(Map.of("name", name, "email", email, "password", PASSWORD));
+        String response = mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode node = json.readTree(response);
+        return new TestUser(UUID.fromString(node.get("user").get("id").asString()), node.get("token").asString());
+    }
+
+    protected static String bearer(TestUser user) {
+        return "Bearer " + user.token();
+    }
+
+    public static final String PASSWORD = "senha12345";
 
     @TestConfiguration
     static class TestClockConfig {

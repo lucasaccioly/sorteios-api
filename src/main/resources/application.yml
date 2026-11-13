@@ -16,6 +16,9 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-dev-only-secret-0123456789}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
 
 springdoc:
   swagger-ui:
