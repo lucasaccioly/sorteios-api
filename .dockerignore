@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+.idea/
+.vscode/
+.superpowers/
+docs/
+scripts/
+*.md
+.env
