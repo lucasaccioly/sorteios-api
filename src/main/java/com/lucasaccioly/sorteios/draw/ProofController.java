@@ -6,6 +6,8 @@ import com.lucasaccioly.sorteios.raffle.Raffle;
 import com.lucasaccioly.sorteios.raffle.RaffleService;
 import com.lucasaccioly.sorteios.raffle.RaffleStatus;
 import com.lucasaccioly.sorteios.ticket.TicketRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Sorteio", description = "Prova pública e verificável do sorteio")
 @RestController
 class ProofController {
 
@@ -31,6 +34,7 @@ class ProofController {
     }
 
     /** Everything needed to recompute the winner independently. Only after the draw: the seed is secret before. */
+    @Operation(summary = "Prova do sorteio: semente revelada, bilhetes e cálculo do vencedor")
     @GetMapping("/api/raffles/{id}/proof")
     @Transactional(readOnly = true)
     ProofResponse proof(@PathVariable UUID id) {

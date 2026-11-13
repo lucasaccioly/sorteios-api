@@ -1,0 +1,4 @@
+# Public demo: seeds demo accounts/raffles and keeps an open raffle available (see demo/ package).
+logging:
+  level:
+    com.lucasaccioly.sorteios.demo: INFO
