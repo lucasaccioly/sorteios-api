@@ -81,6 +81,16 @@ public abstract class IntegrationTest {
         return new TestUser(UUID.fromString(node.get("user").get("id").asString()), node.get("token").asString());
     }
 
+    /** Logs in again (fresh token for the current clock), e.g. after moving the clock past token expiry. */
+    protected TestUser login(String email) throws Exception {
+        String body = json.writeValueAsString(Map.of("email", email, "password", PASSWORD));
+        String response = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode node = json.readTree(response);
+        return new TestUser(UUID.fromString(node.get("user").get("id").asString()), node.get("token").asString());
+    }
+
     protected static String bearer(TestUser user) {
         return "Bearer " + user.token();
     }

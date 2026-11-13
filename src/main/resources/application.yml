@@ -5,6 +5,10 @@ spring:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/sorteios}
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:postgres}
+  data:
+    web:
+      pageable:
+        max-page-size: 100
   jpa:
     open-in-view: false
     hibernate:

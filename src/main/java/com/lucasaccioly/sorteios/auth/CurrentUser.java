@@ -14,6 +14,11 @@ public final class CurrentUser {
         return UUID.fromString(jwt.getSubject());
     }
 
+    public static boolean isAdmin(Jwt jwt) {
+        java.util.List<String> roles = jwt.getClaimAsStringList("roles");
+        return roles != null && roles.contains(Role.ADMIN.name());
+    }
+
     /** Same as {@link #id(Jwt)}, but null for anonymous callers on public endpoints. */
     public static UUID idOrNull(Jwt jwt) {
         return jwt == null ? null : id(jwt);
