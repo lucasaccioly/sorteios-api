@@ -26,6 +26,9 @@ import java.util.UUID;
 public class DemoMaintenance {
 
     static final String ORGANIZER_EMAIL = "organizador@demo.dev";
+    static final String PARTICIPANT_EMAIL = "participante@demo.dev";
+    /** The shared demo participant must still be able to follow the README (buy 2 numbers). */
+    static final int MIN_PARTICIPANT_ROOM = 2;
     static final int MIN_FREE_NUMBERS = 10;
     static final Duration MIN_TIME_LEFT = Duration.ofHours(1);
     static final Duration NEW_RAFFLE_DURATION = Duration.ofHours(24);
@@ -68,10 +71,13 @@ public class DemoMaintenance {
         if (organizer == null) {
             return false;
         }
+        UUID participant = users.findByEmail(PARTICIPANT_EMAIL).map(User::getId).orElse(null);
         Instant now = clock.instant();
         boolean usable = raffles.findByOrganizerIdAndStatusAndDrawAtGreaterThanEqual(
                         organizer, RaffleStatus.OPEN, now.plus(MIN_TIME_LEFT)).stream()
-                .anyMatch(r -> r.getTotalNumbers() - tickets.countByRaffleId(r.getId()) >= MIN_FREE_NUMBERS);
+                .anyMatch(r -> r.getTotalNumbers() - tickets.countByRaffleId(r.getId()) >= MIN_FREE_NUMBERS
+                        && (participant == null || r.getMaxPerUser()
+                        - tickets.countByRaffleIdAndUserId(r.getId(), participant) >= MIN_PARTICIPANT_ROOM));
         if (usable) {
             return false;
         }

@@ -5,12 +5,14 @@ import com.lucasaccioly.sorteios.auth.AuthDtos.LoginRequest;
 import com.lucasaccioly.sorteios.auth.AuthDtos.RegisterRequest;
 import com.lucasaccioly.sorteios.auth.AuthDtos.UserResponse;
 import com.lucasaccioly.sorteios.common.BusinessException;
+import com.lucasaccioly.sorteios.common.InvalidRequestException;
 import com.lucasaccioly.sorteios.common.NotFoundException;
 import com.lucasaccioly.sorteios.common.UnauthorizedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Locale;
 import java.util.UUID;
@@ -36,6 +38,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (request.password().getBytes(StandardCharsets.UTF_8).length > 72) { // BCrypt limit is bytes, not chars
+            throw new InvalidRequestException("password", "Senha muito longa");
+        }
         String email = normalizeEmail(request.email());
         if (users.existsByEmail(email)) {
             throw new BusinessException("E-mail já cadastrado");

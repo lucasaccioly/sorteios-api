@@ -12,11 +12,13 @@ import com.lucasaccioly.sorteios.raffle.RaffleDtos.RaffleRequest;
 import com.lucasaccioly.sorteios.raffle.RaffleDtos.RaffleResponse;
 import com.lucasaccioly.sorteios.ticket.TicketRepository;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -110,6 +112,7 @@ public class RaffleService {
 
     @Transactional(readOnly = true)
     public PageResponse<RaffleResponse> listPublic(RaffleStatus status, String query, Pageable pageable) {
+        checkSort(pageable);
         Specification<Raffle> spec = (root, q, cb) -> cb.notEqual(root.get("status"), RaffleStatus.DRAFT);
         if (status != null) {
             spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), status));
@@ -123,8 +126,20 @@ public class RaffleService {
 
     @Transactional(readOnly = true)
     public PageResponse<RaffleResponse> listMine(UUID callerId, Pageable pageable) {
+        checkSort(pageable);
         Specification<Raffle> spec = (root, q, cb) -> cb.equal(root.get("organizer").get("id"), callerId);
         return PageResponse.of(raffles.findAll(spec, pageable), this::toResponse);
+    }
+
+    /** Spring Data would resolve nested paths (organizer.email): sorting on them leaks data through result order. */
+    private static final Set<String> SORTABLE = Set.of("drawAt", "createdAt", "title", "ticketPriceCents", "totalNumbers", "status");
+
+    private static void checkSort(Pageable pageable) {
+        for (Sort.Order order : pageable.getSort()) {
+            if (!SORTABLE.contains(order.getProperty())) {
+                throw new InvalidRequestException("sort", "Ordenação inválida");
+            }
+        }
     }
 
     private void validate(RaffleRequest request) {

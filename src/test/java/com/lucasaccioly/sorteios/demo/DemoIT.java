@@ -106,4 +106,15 @@ class DemoIT extends IntegrationTest {
         assertThat(maintenance.ensureOpenRaffle()).isTrue();
         assertThat(openWithFreeNumbers()).isEqualTo(1);
     }
+
+    @Test
+    void maintenanceReplacesRaffleWhereDemoParticipantIsNearItsLimit() {
+        UUID open = jdbc.queryForObject("select id from raffles where status = 'OPEN'", UUID.class);
+        jdbc.update("""
+                insert into tickets (id, raffle_id, user_id, number, purchased_at)
+                select gen_random_uuid(), ?, (select id from users where email = 'participante@demo.dev'), n, now()
+                from generate_series(1, 9) n""", open);
+        assertThat(maintenance.ensureOpenRaffle()).isTrue();
+        assertThat(maintenance.ensureOpenRaffle()).isFalse();
+    }
 }

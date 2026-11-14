@@ -225,4 +225,17 @@ class RaffleIT extends RaffleFixtures {
                 .andExpect(jsonPath("$.content", hasSize(2)));
         mvc.perform(get("/api/raffles/mine")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void sort_onlyWhitelistedProperties_noNestedPaths() throws Exception {
+        TestUser org = register("Olga", "olga@x.com");
+        openRaffle(org);
+        for (String sort : new String[]{"organizer.email", "winner.email", "organizer.passwordHash", "seed"}) {
+            mvc.perform(get("/api/raffles").param("sort", sort)).andExpect(status().isBadRequest());
+            mvc.perform(get("/api/raffles/mine").param("sort", sort).header("Authorization", bearer(org)))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(get("/api/raffles").param("sort", "title,desc")).andExpect(status().isOk());
+        mvc.perform(get("/api/raffles").param("sort", "ticketPriceCents")).andExpect(status().isOk());
+    }
 }

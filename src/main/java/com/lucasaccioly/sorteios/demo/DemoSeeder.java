@@ -62,7 +62,7 @@ public class DemoSeeder implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         UUID organizer = ensureUser("Organizadora Demo", DemoMaintenance.ORGANIZER_EMAIL);
-        ensureUser("Participante Demo", "participante@demo.dev");
+        ensureUser("Participante Demo", DemoMaintenance.PARTICIPANT_EMAIL);
         List<UUID> buyers = List.of(
                 ensureUser("Ana Bot", "bot1@demo.dev"),
                 ensureUser("Bruno Bot", "bot2@demo.dev"),

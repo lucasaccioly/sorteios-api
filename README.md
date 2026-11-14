@@ -32,7 +32,7 @@ A demo se mantém sozinha. Ao subir, ela cria uma rifa em cada estado e, a cada 
 
 - **Organizadores** criam rifas: prêmio, preço, quantidade de números (10 a 10.000), limite por pessoa e data do sorteio.
 - **Participantes** compram números escolhidos (`{"numbers": [7, 13]}`) ou aleatórios (`{"quantity": 3}`).
-- Na data marcada, o **sorteio acontece automaticamente**: um job roda a cada minuto e a consulta da rifa também dispara o sorteio.
+- Na data marcada, o **sorteio acontece automaticamente**: um job roda a cada minuto e abrir os detalhes da rifa (`GET /api/raffles/{id}`) também dispara o sorteio.
 - Depois do sorteio, a **prova** fica pública e pode ser verificada por qualquer um.
 
 ```mermaid
@@ -77,6 +77,8 @@ python scripts/verify_draw.py https://sorteios-api.onrender.com/api/raffles/<id>
 
 Ele imprime `OK` e sai com código 0 quando o vencedor confere. Com uma prova adulterada, imprime `FALHOU` e sai com código 1.
 
+O script confere a prova contra ela mesma. Para a garantia completa, anote o `seedHash` da rifa **antes de comprar** e confira se é o mesmo que aparece na prova.
+
 > **Limitação assumida:** quem opera o servidor conhece a semente antes do sorteio. Eliminar isso exigiria uma fonte externa de entropia, como um beacon público ou o hash de um bloco futuro, o que está fora do escopo deste projeto.
 
 ## 🧠 Decisões técnicas
@@ -91,6 +93,9 @@ Ele imprime `OK` e sai com código 0 quando o vencedor confere. Com uma prova ad
 | **Tempo testável** | Um `Clock` é injetado em todo o código. Os testes avançam o relógio para simular a data do sorteio e a expiração do token. |
 | **Testes com Postgres real** | Usa [embedded-postgres](https://github.com/zonkyio/embedded-postgres): os testes rodam no Postgres de verdade, sem Docker e sem H2. |
 | **Schema** | As migrations ficam no Flyway e o Hibernate roda só com `ddl-auto: validate`. |
+| **Ordenação segura** | O parâmetro `sort` só aceita campos de uma lista permitida. Sem isso, ordenar por um campo aninhado, como `organizer.email`, vazaria dados pela ordem dos resultados. |
+
+**Próximos passos:** limite de requisições (rate limiting) no login e no cadastro, e uma fonte externa de entropia para o sorteio.
 
 ## 📚 Endpoints
 
@@ -130,7 +135,7 @@ Depois abra http://localhost:8080. Também dá para usar Docker: `docker compose
 | Variável | Padrão | Uso |
 |---|---|---|
 | `DATABASE_URL` / `DATABASE_USER` / `DATABASE_PASSWORD` | `localhost:5432/sorteios`, `postgres` | Banco |
-| `JWT_SECRET` | segredo de dev | Chave HS256 (≥ 32 bytes) — **troque em produção** |
+| `JWT_SECRET` | segredo de dev | Chave HS256 (≥ 32 bytes) — **troque em produção**. O `render.yaml` gera uma aleatória. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | vazio | Cria ou promove o primeiro admin |
 | `PORT` | `8080` | Porta HTTP |
 
@@ -140,7 +145,7 @@ Depois abra http://localhost:8080. Também dá para usar Docker: `docker compose
 ./mvnw verify
 ```
 
-São 62 testes, entre unitários e de integração com MockMvc e Postgres embarcado. Eles cobrem:
+São 65 testes, entre unitários e de integração com MockMvc e Postgres embarcado. Eles cobrem:
 
 - Autenticação.
 - Ciclo de vida da rifa e regras de compra.

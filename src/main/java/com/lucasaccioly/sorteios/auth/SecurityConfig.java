@@ -46,7 +46,7 @@ class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/raffles", "/api/raffles/*", "/api/raffles/*/numbers",
                                 "/api/raffles/*/proof").permitAll()
                         .requestMatchers("/", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-                                "/actuator/health").permitAll()
+                                "/actuator/health", "/error").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))

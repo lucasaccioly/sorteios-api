@@ -100,4 +100,12 @@ class AuthIT extends IntegrationTest {
         mvc.perform(get("/api/me").header("Authorization", bearer(dani)))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void register_passwordOver72Bytes_returns400() throws Exception {
+        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(body("name", "Ana", "email", "ana@x.com", "password", "é".repeat(40))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password").exists());
+    }
 }
