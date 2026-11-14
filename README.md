@@ -10,7 +10,7 @@ API REST de rifas online com **sorteio auditável**: qualquer pessoa pode recalc
 
 ## 🚀 Demo
 
-**Swagger:** https://sorteios-api.onrender.com
+**Swagger:** https://sorteios-api-dnr8.onrender.com
 
 | Conta | E-mail | Senha |
 |---|---|---|
@@ -72,7 +72,7 @@ winnerIndex   = (primeiros 8 bytes de h, big-endian, sem sinal) mod quantidade_d
 **Verifique você mesmo** com o script em Python, que usa só a biblioteca padrão:
 
 ```bash
-python scripts/verify_draw.py https://sorteios-api.onrender.com/api/raffles/<id>/proof
+python scripts/verify_draw.py https://sorteios-api-dnr8.onrender.com/api/raffles/<id>/proof
 ```
 
 Ele imprime `OK` e sai com código 0 quando o vencedor confere. Com uma prova adulterada, imprime `FALHOU` e sai com código 1.
